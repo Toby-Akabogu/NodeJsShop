@@ -20,7 +20,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use((req, res, next) => {
     User.findById('5e4ab0dbf9afc821c403b54c')
         .then(user => {
-            req.user = new User(user.name, user.email, user.cart, user._id);
+            req.user = user;
             next();
         })
         .catch(err => console.log(err));
@@ -34,9 +34,23 @@ app.use(errorController.getErrorPage);
 mongoose
     .connect('')
     .then(result => {
+        User
+            .findOne()
+            .then(user => {
+                if (!user) {
+                    const user = new User({
+                        name: 'Tobe',
+                        email: 'tobeakabogu@gmail.com',
+                        cart: {
+                            items: []
+                        }
+                    });
+                    user.save();
+                }
+            });
         app.listen(3000);
     })
     .catch(err => {
         console.log(err);
-    })
+    });
 
