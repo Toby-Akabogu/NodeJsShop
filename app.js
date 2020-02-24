@@ -32,7 +32,7 @@ app.use(shopRoutes);
 app.use(errorController.getErrorPage);
 
 mongoose
-    .connect('')
+    .connect('mongodb://localhost:27017/Shop')
     .then(result => {
         User
             .findOne()
