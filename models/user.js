@@ -46,24 +46,12 @@ userSchema.methods.removeFromCart = function(productId) {
     return this.save();
 }
 
-userSchema.methods.addOrder = function() {
-    return this.getCart()
-    .then(products => {
-        const order = {
-            items: products,
-            user: {
-                _id: new ObjectId(this._id),
-                name: this.name
-            }
-        };
-        return db.collection('orders').insertOne(order);
-    })
-    .then(result => {
-        this.cart = {items: []};
-        return db.collection('users').updateOne({_id: new ObjectId(this._id)}, {$set: {cart: {items: [] }}});
-
-    })
+userSchema.methods.clearCart = function() {
+    this.cart = { items: []};
+    return this.save();
 }
+
+
 
 // userSchema.methods.getCart = function() {
 //     const productIds = this.cart.items.map(i => {
