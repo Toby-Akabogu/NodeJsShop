@@ -1,4 +1,6 @@
 const Product = require('../models/product');
+const mongoose = require('mongoose');
+const fileHelper = require('../utils/file');
 
 const { validationResult } = require('express-validator/check');
 
@@ -18,20 +20,35 @@ exports.getAddProduct = (req, res, next) => {
 
 exports.postAddProduct = (req, res, next) => {
     const title = req.body.title;
-    const imageUrl = req.body.imageUrl;
+    const image = req.file;
     const description = req.body.description;
     const price = req.body.price;
-    const errors = validationResult(req);
-
-    if(!errors.isEmpty()) {
-        res.status(422).render('admin/add-product', {
+    if (!image) {
+        return res.status(422).render('admin/add-product', {
             pageTitle: 'Add Product',
             path: '/admin/add-product',
             editing: false,
             hasError: true,
             product: {
                 title: title,
-                imageUrl: imageUrl,
+                price: price,
+                description: description
+            },
+            errorMessage: 'Attached file is not an image',
+            validationErrors: []
+        });
+    }
+
+    const errors = validationResult(req);
+
+    if(!errors.isEmpty()) {
+        return res.status(422).render('admin/add-product', {
+            pageTitle: 'Add Product',
+            path: '/admin/add-product',
+            editing: false,
+            hasError: true,
+            product: {
+                title: title,
                 price: price,
                 description: description
             },
@@ -40,6 +57,9 @@ exports.postAddProduct = (req, res, next) => {
         });
 
     }
+
+    const imageUrl = image.path;
+
     const product = new Product({
         title: title,
         price: price,
@@ -106,9 +126,11 @@ exports.getEditProduct = (req, res, next) => {
 exports.postEditProduct = (req, res, next) => {
     const prodId = req.body.productId;
     const updatedTitle = req.body.title;
-    const updatedImgUrl = req.body.imageUrl;
+    const image = req.file;
     const updatedDescription = req.body.description;
     const updatedPrice = req.body.price;
+
+
 
     const errors = validationResult(req);
 
@@ -120,7 +142,6 @@ exports.postEditProduct = (req, res, next) => {
             hasError: true,
             product: {
                 title: updatedTitle,
-                imageUrl: updatedImgUrl,
                 price: updatedPrice,
                 description: updatedDescription,
                 _id: prodId
@@ -140,7 +161,10 @@ exports.postEditProduct = (req, res, next) => {
             product.title = updatedTitle;
             product.price = updatedPrice;
             product.description = updatedDescription;
-            product.imageUrl = updatedImgUrl;
+            if (image) {
+                fileHelper.deleteFile(product.imageUrl);
+                product.imageUrl = image.path;
+            }
             return product
                 .save()
                 .then(result => {
@@ -176,17 +200,24 @@ exports.getProducts = (req, res, next) => {
         });
 }
 
-exports.postDeleteProduct = (req, res, next) => {
-    const prodId = req.body.productId;
-    Product
-        .deleteOne({ _id: prodId, userId: req.user._id })
-        .then(() => {
-            console.log('Destroyed Product');
-            res.redirect('/admin/products');
-        })
-        .catch(err => {
-            const error = new Error(err);
-            error.httpStatusCode = 500;
-            return next(err);
+exports.deleteProduct = (req, res, next) => {
+    const prodId = req.params.productId;
+    Product.findById(prodId).then(product => {
+        if (!product) {
+            return next(new Error('Product not found.'));
+        }
+        fileHelper.deleteFile(product.imageUrl);
+        return Product.deleteOne({ _id: prodId, userId: req.user._id });
+    })
+    .then(() => {
+        console.log('Destroyed Product');
+        res.status(200).json({
+            message: "Success"
         });
-}
+    })
+    .catch(err => {
+        res.status(500).json({
+            message: "Deleting Product failed"
+        });
+    });
+};

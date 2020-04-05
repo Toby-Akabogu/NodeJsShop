@@ -1,30 +1,32 @@
 <%- include('../includes/head.ejs') %>
-</head>
+    <link rel="stylesheet" href="/css/cart.css">
+    </head>
 
-<body>
-    <%- include('../includes/nav.ejs') %>
-    <main>
-        <% if (products.length > 0) { %>
-            <ul>
-                <% products.forEach(p => { %>
-                    <li>
-                        <p><%= p.productId.title %> (<%= p.quantity %>)</p>
-                        <form action="/cart-delete-item" method="POST">
-                            <input type="hidden" value="<%= p.productId._id %>" name="productId">
-                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                            <button class="btn" type="submit">Delete</button>
-                        </form>
-                    </li>
-                <% }) %>
-            </ul>
-            <div class="centered">
-                <form action="/create-order" method="POST">
-                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                    <button class="btn" type="submit">Order Now</button>
-                </form>
-            </div>
-            <% } else { %>
-                <h1>No Products In Cart</h1>
-            <% } %>
-    </main>
-    <%- include('../includes/end.ejs') %>
+    <body>
+        <%- include('../includes/nav.ejs') %>
+        <main>
+            <% if (products.length > 0) { %>
+                <ul class="cart__item-list">
+                    <% products.forEach(p => { %>
+                        <li class="cart__item">
+                            <p><%= p.productId.title %> (<%= p.quantity %>)</p>
+                            <form action="/cart-delete-item" method="POST">
+                                <input type="hidden" value="<%= p.productId._id %>" name="productId">
+                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                <button class="btn" type="submit">Delete</button>
+                            </form>
+                        </li>
+                    <% }) %>
+                </ul>
+                <div class="centered">
+                    <!-- <form action="/create-order" method="POST">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button class="btn" type="submit">Order Now</button>
+                    </form> -->
+                    <a class="btn" href="/checkout">Order Now</a>
+                </div>
+                <% } else { %>
+                    <h1>No Products In Cart</h1>
+                <% } %>
+        </main>
+        <%- include('../includes/end.ejs') %>
